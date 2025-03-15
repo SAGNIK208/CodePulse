@@ -1,5 +1,5 @@
 import axiosInstance from "../axiosInstance";
-import { PROBLEM_ADMIN_SERVICE_URL } from "@repo/config/src/constant";
+import { PROBLEM_ADMIN_SERVICE_URL } from "@repo/config/constant"
 
 const PROBLEM_ADMIN_API_URL = `${PROBLEM_ADMIN_SERVICE_URL}/api/v1`;
 

@@ -1,7 +1,7 @@
 import JavaExecutor from '../containers/javaExecutor';
 import PythonExecutor from '../containers/pythonExecutor';
 import CppExecutor from '../containers/cppExecutor';
-import { CodeExecutorStrategy } from '../types/CodeExecutorStrategy';
+import {CodeExecutorStrategy} from '../types/CodeExecutorStrategy';
 
 export default function createExecutor(
   codeLanguage: string,

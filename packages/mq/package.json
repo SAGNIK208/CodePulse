@@ -11,13 +11,15 @@
     "./producers/*":"./src/producers/*.ts",
     "./queues/*":"./src/queues/*.ts",
     "./jobs/*":"./src/jobs/*.ts",
+    "./types/*":"./src/types/*.ts",
     "./bullboardConnection":"./src/index.ts"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/redis": "workspace:*",
-    "@repo/backend-common": "workspace:*"
+    "@repo/backend-common": "workspace:*",
+    "@repo/code-executor": "workspace:*"
   },
   "keywords": [],
   "author": "",

@@ -1,0 +1,24 @@
+{
+  "name": "@repo/code-executor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@repo/backend-common": "workspace:*",
+    "@repo/config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/dockerode": "^3.3.35"
+  },
+  "exports": {
+    "./executorFactory":"./utils/ExecutorFactory.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dockerode": "^4.0.4"
+  }
+}

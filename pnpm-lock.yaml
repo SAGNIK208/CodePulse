@@ -30,9 +30,6 @@ importers:
       body-parser:
         specifier: ^1.20.3
         version: 1.20.3
-      dockerode:
-        specifier: ^4.0.4
-        version: 4.0.4
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -58,9 +55,6 @@ importers:
       '@types/body-parser':
         specifier: ^1.19.5
         version: 1.19.5
-      '@types/dockerode':
-        specifier: ^3.3.35
-        version: 3.3.35
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.0
@@ -190,6 +184,9 @@ importers:
 
   packages/backend-common:
     dependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
       axios:
         specifier: ^1.8.3
         version: 1.8.3
@@ -197,12 +194,28 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+
+  packages/code-executor:
+    dependencies:
+      dockerode:
+        specifier: ^4.0.4
+        version: 4.0.4
+    devDependencies:
+      '@repo/backend-common':
+        specifier: workspace:*
+        version: link:../backend-common
       '@repo/config':
         specifier: workspace:*
         version: link:../config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/dockerode':
+        specifier: ^3.3.35
+        version: 3.3.35
 
   packages/config:
     dependencies:
@@ -297,6 +310,9 @@ importers:
       '@repo/backend-common':
         specifier: workspace:*
         version: link:../backend-common
+      '@repo/code-executor':
+        specifier: workspace:*
+        version: link:../code-executor
       '@repo/config':
         specifier: workspace:*
         version: link:../config

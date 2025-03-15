@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/controllers/problemcontroller.ts","./src/routes/index.ts","./src/routes/v1/index.ts","./src/routes/v1/problemroutes.ts","./src/services/problemservice.ts","./src/utils/errorhandler.ts","./src/utils/markeddownsanitizer.ts"],"errors":true,"version":"5.8.2"}
+{"root":["./src/index.ts","./src/controllers/problemcontroller.ts","./src/routes/index.ts","./src/routes/v1/index.ts","./src/routes/v1/problemroutes.ts","./src/services/problemservice.ts","./src/utils/errorhandler.ts","./src/utils/markeddownsanitizer.ts"],"version":"5.8.2"}

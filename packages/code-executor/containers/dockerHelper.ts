@@ -1,4 +1,4 @@
-import DockerStreamOutput from '../types/dockerStreamOutput';
+import DockerStreamOutput from '../../../apps/evalutor-service/src/types/dockerStreamOutput';
 import { DOCKER_STREAM_HEADER_SIZE } from '@repo/config/constant';
 
 export function decodeDockerStream(buffer: Buffer): DockerStreamOutput {
