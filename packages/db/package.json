@@ -1,0 +1,25 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/config": "workspace:*",
+    "mongoose": "^8.12.1"
+  },
+  "exports":{
+    "./repository/*": "./src/repository/*.ts",
+    "./models/*": "./src/models/*.ts",
+    "./connect":"./src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@repo/mq",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "exports":{
+    "./workers/*":"./src/workers/*.ts",
+    "./producers/*":"./src/producers/*.ts",
+    "./queues/*":"./src/queues/*.ts",
+    "./jobs/*":"./src/jobs/*.ts",
+    "./bullboardConnection":"./src/index.ts"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/redis": "workspace:*",
+    "@repo/backend-common": "workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@bull-board/api": "^6.7.10",
+    "@bull-board/express": "^6.7.10",
+    "@bull-board/ui": "^6.7.10",
+    "bullmq": "^5.43.1"
+  }
+}

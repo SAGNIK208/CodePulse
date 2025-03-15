@@ -1,0 +1,22 @@
+{
+  "name": "@repo/redis",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@repo/typescript-config": "workspace:*"
+  },
+  "exports":{
+    "./redisConnection": "./src/redisConnection.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ioredis": "^5.6.0"
+  }
+}
