@@ -21,8 +21,8 @@ function evaluationWorker(queue: string): void {
               payload: job.data,
             }
           );
-          console.log(response.data);
-          console.log(job.data);
+          // console.log(response.data);
+          // console.log(job.data);
         } catch (error) {
           console.error("Error in evaluation worker:", error);
         }

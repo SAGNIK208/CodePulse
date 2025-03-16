@@ -8,6 +8,7 @@ import bullBoardAdapter from '@repo/mq/bullboardConnection';
 import logger from '@repo/config/loggerConfig';
 import apiRouter from './routes';
 import { SAMPLE_QUEUE, SUBMISSION_QUEUE } from '@repo/config/constant';
+// import submissionQueueProducer from '@repo/mq/producers/submissionQueueProducer'
 // import runPython from './containers/runPythonDocker';
 // import runCpp from './containers/runCppDocker';
 // import runJava from './containers/runJavaDocker';
@@ -28,46 +29,48 @@ app.listen(EVALUATOR_PORT, () => {
   SampleWorker(SAMPLE_QUEUE);
   SubmissionWorker(SUBMISSION_QUEUE);
 
-  //   const userCode = `
+    // const userCode = `
 
-  //     class Solution {
-  //       public:
-  //       vector<int> permute() {
-  //           vector<int> v;
-  //           v.push_back(10);
-  //           return v;
-  //       }
-  //     };
-  //   `;
+    //   class Solution {
+    //     public:
+    //     vector<int> permute() {
+    //         vector<int> v;
+    //         v.push_back(10);
+    //         return v;
+    //     }
+    //   };
+    // `;
 
-  //   const code = `
-  //   #include<iostream>
-  //   #include<vector>
-  //   #include<stdio.h>
-  //   using namespace std;
+    // const code = `
+    // #include<iostream>
+    // #include<vector>
+    // #include<stdio.h>
+    // using namespace std;
 
-  //   ${userCode}
+    // ${userCode}
 
-  //   int main() {
+    // int main() {
 
-  //     Solution s;
-  //     vector<int> result = s.permute();
-  //     for(int x : result) {
-  //       cout<<x<<" ";
-  //     }
-  //     cout<<endl;
-  //     return 0;
-  //   }
-  //   `;
+    //   Solution s;
+    //   vector<int> result = s.permute();
+    //   for(int x : result) {
+    //     cout<<x<<" ";
+    //   }
+    //   cout<<endl;
+    //   return 0;
+    // }
+    // `;
 
-  //   const inputCase = `10
-  // `;
+    // const inputCase = `10`;
 
-  //   submissionQueueProducer({
-  //     '1234': {
-  //       language: 'CPP',
-  //       inputCase,
-  //       code,
-  //     },
-  //   });
+    // const outputCase = `10`;
+
+    // submissionQueueProducer({
+    //   '1234': {
+    //     language: 'CPP',
+    //     inputCase,
+    //     outputCase,
+    //     code,
+    //   },
+    // });
 });

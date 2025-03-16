@@ -15,7 +15,7 @@ export default class SubmissionJob implements IJob {
 
   handle = async (job?: Job) => {
     console.log('Handler of the job called');
-    console.log(this.payload);
+    // console.log(this.payload);
   
     if (job) {
       const keys = Object.keys(this.payload);
@@ -34,7 +34,7 @@ export default class SubmissionJob implements IJob {
   
       // Destructure safely
       const { language: codeLanguage, code, inputCase: inputTestCase, outputCase: outputTestCase, userId, submissionId } = submission;
-  
+      console.log(userId,submissionId);
       const strategy = createExecutor(codeLanguage);
       console.log(strategy);
   
