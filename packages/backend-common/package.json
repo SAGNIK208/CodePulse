@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b"
   },
   "keywords": [],
   "author": "",
@@ -18,9 +19,9 @@
     "@repo/typescript-config": "workspace:*"
   },
   "exports": {
-    "./types": "./src/types.ts",
-    "./validator": "./src/validator.ts",
-    "./api/*":"./src/apis/*.ts",
-    "./axiosInstance":"./src/axiosInstance.ts"
+    "./types": "./dist/types.js",
+    "./validator": "./dist/validator.js",
+    "./api/*":"./dist/apis/*.js",
+    "./axiosInstance":"./dist/axiosInstance.js"
   }
 }

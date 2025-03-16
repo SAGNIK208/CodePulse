@@ -2,7 +2,9 @@ import winston from 'winston';
 import 'winston-mongodb';
 import { LOG_DB_URL } from './constant';
 
-const allowedTransports: winston.transport[] = [];
+const SERVICE = process.env.SERVICE || "default_service"
+
+const allowedTransports = [];
 
 allowedTransports.push(
     new winston.transports.Console({
@@ -19,7 +21,7 @@ if (LOG_DB_URL) {
         new winston.transports.MongoDB({
             level: 'error',
             db: LOG_DB_URL,
-            collection: 'code_pulse_logs',
+            collection: `${SERVICE}_logs`,
             options: { useUnifiedTopology: true },
         })
     );

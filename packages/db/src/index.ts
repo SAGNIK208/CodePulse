@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { ATLAS_DB_URL, NODE_ENV } from '@repo/config/constant';
 
-async function connectToDB(): Promise<void> {
+async function connectToDB(){
     try {
         if (NODE_ENV === 'dev') {
             await mongoose.connect(ATLAS_DB_URL);

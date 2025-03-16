@@ -13,6 +13,6 @@ export const SAMPLE_QUEUE = 'SampleQueue';
 export const EVALUATOR_PORT = process.env.PORT || 3000;
 export const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
 export const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379', 10);
-export const SUBMISSION_PORT = process.env.PORT || 3002;
+export const SUBMISSION_PORT = process.env.PORT || 3000;
 export const PROBLEM_ADMIN_SERVICE_URL = process.env.PROBLEM_ADMIN_SERVICE_URL;
 export const SOCKET_SERVICE_URL = process.env.SOCKET_SERVICE_URL;

@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b"
   },
   "exports":{
-    "./workers/*":"./src/workers/*.ts",
-    "./producers/*":"./src/producers/*.ts",
-    "./queues/*":"./src/queues/*.ts",
-    "./jobs/*":"./src/jobs/*.ts",
-    "./types/*":"./src/types/*.ts",
-    "./bullboardConnection":"./src/index.ts"
+    "./workers/*":"./dist/workers/*.js",
+    "./producers/*":"./dist/producers/*.js",
+    "./queues/*":"./dist/queues/*.js",
+    "./jobs/*":"./dist/jobs/*.js",
+    "./types/*":"./dist/types/*.js",
+    "./bullboardConnection":"./dist/index.js"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
