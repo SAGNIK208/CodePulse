@@ -2,13 +2,21 @@ import Button from "@repo/ui/button";
 import Badge from "@repo/ui/badge";
 import Layout from "../../components/Layout";
 import Link from "next/link";
+import axios from "axios";
 
 const links = [
   { href: "/", label: "Home" },
 ];
 
+const PROBLEM_SERVICE_URL = process.env.NEXT_PUBLIC_PROBLEM_SERVICE_URL;
+type Problem = {
+  title : string,
+  difficulty : string,
+  tags: string[]
+  id: string | number
+}
 
-const problems = [
+const defaultProblems = [
   { title: "Two Sum", difficulty: "Easy", tags: ["Array", "Hash Table"],id: 0 },
   {
     title: "Add Two Numbers",
@@ -37,7 +45,17 @@ const problems = [
   { title: "Valid Parentheses", difficulty: "Easy", tags: ["String", "Stack"],id:5 },
 ];
 
-export default function ProblemsPage() {
+async function fetchProblems(){
+  try{
+    const response = await axios.get(`${PROBLEM_SERVICE_URL}/problems`);
+    return response.data;
+  }catch(error){
+    return defaultProblems;
+  }
+}
+
+export default async function ProblemsPage() {
+  const problems : Problem[] = await fetchProblems();
     return (
       <Layout links={links}>
         <div className="flex flex-col items-center justify-center min-h-screen">

@@ -8,19 +8,33 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ArrowLeft } from 'lucide-react';
 import  Button  from "@repo/ui/button" // Assuming you have shadcn/ui
 import Layout from "../../../components/Layout"; // Import your Layout component
+import { io, Socket } from 'socket.io-client';
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/problems", label: "Problems" }
 ];
 
+interface TestCase {
+  input: string;
+  output: string;
+}
+
+interface CodeStub {
+  language: string;
+  startSnippet: string;
+  endSnippet: string;
+  userSnippet: string;
+}
 
 interface Problem {
   id: string;
   title: string;
   description: string;
+  difficulty: string;
+  testCases: TestCase[];
+  codeStubs: CodeStub[];
   editorial: string;
-  starterCode: Record<string, string>;
 }
 
 const languages = ["JavaScript", "Java", "C++", "Python"] as const;
@@ -33,6 +47,17 @@ const languageMap: Record<Language, string> = {
   Python: "python",
 };
 
+const languageCodeMap: Record<Language, string> = {
+  JavaScript: "JAVASCRIPT",
+  Java: "JAVA",
+  "C++": "CPP",
+  Python: "PYTHON",
+};
+
+const SOCKET_SERVICE_URL = process.env.NEXT_PUBLIC_SOCKET_SERVICE_URL;
+const SUBMISSION_SERVICE_URL = process.env.NEXT_PUBLIC_SUBMISSION_SERVICE_URL;
+const PROBLEM_SERVICE_URL = process.env.NEXT_PUBLIC_PROBLEM_SERVICE_URL;
+
 const ProblemPage = () => {
   const { problemId } = useParams();
   const router = useRouter();
@@ -41,35 +66,113 @@ const ProblemPage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("JavaScript");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const userId = "user123"; // Replace with actual user ID retrieval logic
+
+  useEffect(() => {
+    // Establish Socket.IO connection
+    const newSocket = io(SOCKET_SERVICE_URL); // Replace with your socket server URL
+    setSocket(newSocket);
+
+    newSocket.emit('setUserId', userId);
+
+    newSocket.on('submissionPayloadResponse', (payload) => {
+      console.log('Submission Response:', payload);
+      // Handle the submission response here (e.g., show results)
+    });
+
+    // Clean up the socket connection on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [userId]);
 
   useEffect(() => {
     const fetchProblem = async () => {
       setLoading(true);
-      // Replace with your actual API call here
-      const dummyProblem: Problem = {
-        id: problemId as string,
-        title: "Two Sum",
-        description: `### Two Sum Problem\n\nGiven an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\n**Example:**\n\`\`\`\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]\n\`\`\``,
-        editorial: `### Editorial Solution\n\n#### Optimal Approach:\n\`\`\`javascript\nfunction twoSum(nums, target) {\n  let map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    let complement = target - nums[i];\n    if (map.has(complement)) {\n      return [map.get(complement), i];\n    }\n    map.set(nums[i], i);\n  }\n}\n\`\`\`\n`,
-        starterCode: {
-          JavaScript: `function twoSum(nums, target) {\n  // Write your code here\n};`,
-          Java: `public int[] twoSum(int[] nums, int target) {\n    // Write your code here\n    return new int[0];\n}`,
-          "C++": `vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n    return {};\n}`,
-          Python: `def twoSum(nums, target):\n    # Write your code here\n    pass`,
-        },
-      };
-      setProblem(dummyProblem);
-      setCode(dummyProblem.starterCode[selectedLanguage] || "");
-      setLoading(false);
+      try {
+        const response = await fetch(`${PROBLEM_SERVICE_URL}/problems/${problemId}`);
+        if (!response.ok) {
+          console.error(`Failed to fetch problem: ${response.status}`);
+          setLoading(false);
+          return;
+        }
+        const data: Problem = await response.json();
+        setProblem(data);
+
+        // Set initial code based on the first code stub for the default language
+        const defaultLanguageStub = data.codeStubs.find(
+          (stub) => stub.language === languageCodeMap[selectedLanguage]
+        );
+        setCode(defaultLanguageStub?.userSnippet || "");
+      } catch (error) {
+        console.error("Error fetching problem:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchProblem();
+
+    if (problemId) {
+      fetchProblem();
+    }
   }, [problemId, selectedLanguage]);
 
   useEffect(() => {
     if (problem) {
-      setCode(problem.starterCode[selectedLanguage] || "");
+      const currentLanguageStub = problem.codeStubs.find(
+        (stub:CodeStub) => stub.language === languageCodeMap[selectedLanguage]
+      );
+      setCode(currentLanguageStub?.userSnippet || "");
     }
   }, [selectedLanguage, problem]);
+
+  const handleLanguageChange = (lang: Language) => {
+    setSelectedLanguage(lang);
+  };
+
+  const handleSubmit = async () => {
+    if (!problem) {
+      console.error("No problem loaded, cannot submit.");
+      return;
+    }
+
+    if (!socket?.connected) {
+      console.error("Socket not connected.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${SUBMISSION_SERVICE_URL}/api/v1/submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          language: languageCodeMap[selectedLanguage],
+          code: code,
+          problemId: problem.id,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`Submission failed: ${response.status}`);
+        const errorData = await response.json();
+        console.error("Submission error details:", errorData);
+        // Optionally show an error message to the user
+        return;
+      }
+
+      const submissionResult = await response.json();
+      console.log("Submission successful:", submissionResult);
+      // Optionally show a success message or redirect the user
+      // The 'submissionPayloadResponse' event from the socket will also be triggered.
+
+    } catch (error) {
+      console.error("Error submitting code:", error);
+      // Optionally show an error message to the user
+    }
+  };
 
   if (loading) {
     return (
@@ -93,7 +196,7 @@ const ProblemPage = () => {
           </Button>
           <h1 className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-100">
             {problem?.title}
-            <span className="ml-2 text-sm font-medium text-green-500">Easy</span>
+            <span className="ml-2 text-sm font-medium text-green-500">{problem?.difficulty}</span>
           </h1>
         </div>
 
@@ -138,7 +241,7 @@ const ProblemPage = () => {
                       {languages.map((lang) => (
                         <DropdownMenu.Item
                           key={lang}
-                          onClick={() => setSelectedLanguage(lang)}
+                          onClick={() => handleLanguageChange(lang)}
                           className="px-3 py-1.5 md:px-4 md:py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-md transition-colors duration-200 text-sm md:text-md"
                         >
                           {lang}
@@ -151,6 +254,7 @@ const ProblemPage = () => {
               <div className="mt-4 sm:mt-0">
               <Button
                 className="px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 text-sm md:text-lg font-medium"
+                onClick={handleSubmit}
               >
                 Submit
               </Button>

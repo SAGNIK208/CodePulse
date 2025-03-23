@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useForm, useFieldArray } from 'react-hook-form';
 import Layout from '../../components/Layout';
+import axios from 'axios';
+import { title } from 'process';
 
 const links = [
     { href: "/", label: "Home" },
     { href: "/problems", label: "Problems" }
 ];
-  
+
+const PROBLEM_SERVICE_URL = process.env.NEXT_PUBLIC_PROBLEM_SERVICE_URL;
+
 
 // Mock data and types
 const languages = ["JavaScript", "Java", "C++", "Python"] as const;
@@ -27,12 +31,18 @@ interface CodeTemplate {
     endSnippet: string;
 }
 
+interface TestCase {
+    input: string;
+    output: string;
+}
+
 interface ProblemFormData {
     title: string;
     description: string;
     editorial?: string;
     difficulty: Difficulty;
-    codeTemplates: CodeTemplate[];
+    codeStubs: CodeTemplate[];
+    testCases: TestCase[]; // Add testCases to the interface
 }
 
 const AdminAddProblemPage = () => {
@@ -44,22 +54,55 @@ const AdminAddProblemPage = () => {
             description: '',
             editorial: '',
             difficulty: "Easy",
-            codeTemplates: [{ language: "JavaScript", startSnippet: '', userCodeSnippet: '', endSnippet: '' }],
+            codeStubs: [{ language: "JavaScript", startSnippet: '', userCodeSnippet: '', endSnippet: '' }],
+            testCases: [{ input: '', output: '' }], // Initialize testCases
         },
     });
-    const { fields, append, remove } = useFieldArray({
+    const { fields: codeTemplateFields, append: appendCodeTemplate, remove: removeCodeTemplate } = useFieldArray({
         control,
-        name: "codeTemplates",
+        name: "codeStubs",
+    });
+    const { fields: testCaseFields, append: appendTestCase, remove: removeTestCase } = useFieldArray({
+        control,
+        name: "testCases",
     });
     const [descriptionPreview, setDescriptionPreview] = useState("");
     const [editorialPreview, setEditorialPreview] = useState("");
+    const [tickerMessage, setTickerMessage] = useState<string | null>(null);
+    const [tickerType, setTickerType] = useState<'success' | 'error' | null>(null);
+
+    const showTicker = (message: string, type: 'success' | 'error') => {
+        setTickerMessage(message);
+        setTickerType(type);
+        setTimeout(() => {
+            setTickerMessage(null);
+            setTickerType(null);
+        }, 3000); // Ticker will disappear after 3 seconds
+    };
 
     const onSubmit = async (data: ProblemFormData) => {
         setLoading(true);
-        console.log(data);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setLoading(false);
-        router.push('/admin/problems');
+        try {
+            const payload = {
+                title:data.title,
+                testCases:data.testCases,
+                description:data.description,
+                difficulty:data.difficulty,
+                editorial:data.editorial,
+
+            }
+            const response = await axios.post(`${PROBLEM_SERVICE_URL}/problems`, data);
+            if (response.status >= 200 && response.status < 300) {
+                showTicker('Problem added successfully!', 'success');
+            } else {
+                showTicker('Failed to add problem.', 'error');
+            }
+        } catch (error: any) {
+            console.error("Error adding problem:", error);
+            showTicker('Failed to add problem due to an error.', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,7 +117,7 @@ const AdminAddProblemPage = () => {
 
     return (
       <Layout links={links}>
-          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 p-4 md:p-6 lg:p-8 pt-20"> {/* Added pt-20 */}
+          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 p-4 md:p-6 lg:p-8 pt-20">
             <div className="flex items-center mb-6 md:mb-8">
                 <button
                     onClick={() => router.back()}
@@ -84,6 +127,12 @@ const AdminAddProblemPage = () => {
                 </button>
                 <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Add New Problem</h1>
             </div>
+
+            {tickerMessage && tickerType && (
+                <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-md shadow-lg py-2 px-4 text-white ${tickerType === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {tickerMessage}
+                </div>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left Panel */}
@@ -159,13 +208,13 @@ const AdminAddProblemPage = () => {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Code Templates
                         </label>
-                        {fields.map((field, index) => (
+                        {codeTemplateFields.map((field, index) => (
                             <div key={field.id} className="mb-4 p-4 border rounded-md bg-gray-50 dark:bg-gray-800">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Language:</span>
                                     <div className='flex items-center gap-2'>
                                         <select
-                                            {...register(`codeTemplates.${index}.language`, { required: "Language is required" })}
+                                            {...register(`codeStubs.${index}.language`, { required: "Language is required" })}
                                             className="shadow-sm border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-100 dark:text-gray-100 w-[180px]"
                                         >
                                             <option value="">Select Language</option>
@@ -177,27 +226,27 @@ const AdminAddProblemPage = () => {
                                         </select>
                                         <button
                                             type="button"
-                                            onClick={() => remove(index)}
+                                            onClick={() => removeCodeTemplate(index)}
                                             className="text-red-500 hover:text-red-700 rounded-md p-2"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>
                                     </div>
                                 </div>
-                                {errors.codeTemplates?.[index]?.language && (
-                                    <p className="text-red-500 text-xs mt-1">{errors.codeTemplates[index].language.message}</p>
+                                {errors.codeStubs?.[index]?.language && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.codeStubs[index].language.message}</p>
                                 )}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Start Snippet
                                     </label>
                                     <textarea
-                                        {...register(`codeTemplates.${index}.startSnippet`, { required: "Start snippet is required" })}
+                                        {...register(`codeStubs.${index}.startSnippet`, { required: "Start snippet is required" })}
                                         className="w-full mb-2 shadow-sm border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-100 dark:text-gray-100"
                                         placeholder="Enter the starting code snippet"
                                     />
-                                    {errors.codeTemplates?.[index]?.startSnippet && (
-                                        <p className="text-red-500 text-xs mt-1">{errors.codeTemplates[index].startSnippet.message}</p>
+                                    {errors.codeStubs?.[index]?.startSnippet && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.codeStubs[index].startSnippet.message}</p>
                                     )}
                                 </div>
                                 <div>
@@ -205,12 +254,12 @@ const AdminAddProblemPage = () => {
                                         User Code Snippet
                                     </label>
                                     <textarea
-                                        {...register(`codeTemplates.${index}.userCodeSnippet`, { required: "User code snippet is required" })}
+                                        {...register(`codeStubs.${index}.userCodeSnippet`, { required: "User code snippet is required" })}
                                         className="w-full shadow-sm border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-100 dark:text-gray-100"
                                         placeholder="Enter the user code snippet"
                                     />
-                                    {errors.codeTemplates?.[index]?.userCodeSnippet && (
-                                        <p className="text-red-500 text-xs mt-1">{errors.codeTemplates[index].userCodeSnippet.message}</p>
+                                    {errors.codeStubs?.[index]?.userCodeSnippet && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.codeStubs[index].userCodeSnippet.message}</p>
                                     )}
                                 </div>
                                 <div>
@@ -218,26 +267,26 @@ const AdminAddProblemPage = () => {
                                         End Snippet
                                     </label>
                                     <textarea
-                                        {...register(`codeTemplates.${index}.endSnippet`, { required: "End snippet is required" })}
+                                        {...register(`codeStubs.${index}.endSnippet`, { required: "End snippet is required" })}
                                         className="w-full mb-2 shadow-sm border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-100 dark:text-gray-100"
                                         placeholder="Enter the ending code snippet"
                                     />
-                                    {errors.codeTemplates?.[index]?.endSnippet && (
-                                        <p className="text-red-500 text-xs mt-1">{errors.codeTemplates[index].endSnippet.message}</p>
+                                    {errors.codeStubs?.[index]?.endSnippet && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.codeStubs[index].endSnippet.message}</p>
                                     )}
                                 </div>
                             </div>
                         ))}
-                        {fields.length === 0 && <p className="text-red-500 text-xs mt-1">At least one code template is required</p>}
+                        {codeTemplateFields.length === 0 && <p className="text-red-500 text-xs mt-1">At least one code template is required</p>}
                         <button
                             type="button"
-                            onClick={() => append({ language: languages[0], startSnippet: '', userCodeSnippet: '', endSnippet: '' })}
+                            onClick={() => appendCodeTemplate({ language: languages[0], startSnippet: '', userCodeSnippet: '', endSnippet: '' })}
                             className="mt-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
                             + Add Language
                         </button>
                     </div>
-                </div>
+                 </div>
 
                 {/* Right Panel */}
                 <div className="space-y-6">
@@ -247,12 +296,69 @@ const AdminAddProblemPage = () => {
                             <ReactMarkdown>{descriptionPreview}</ReactMarkdown>
                         </div>
                     </div>
+
                     <div>
                         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Editorial Preview</h3>
                         <div className='border rounded-md prose dark:prose-invert bg-gray-100 dark:bg-gray-800 p-4'>
                             <ReactMarkdown>{editorialPreview}</ReactMarkdown>
                         </div>
                     </div>
+
+                    {/* Test Cases */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Test Cases
+                        </label>
+                        {testCaseFields.map((field, index) => (
+                            <div key={field.id} className="mb-4 p-4 border rounded-md bg-gray-50 dark:bg-gray-800">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Test Case #{index + 1}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeTestCase(index)}
+                                        className="text-red-500 hover:text-red-700 rounded-md p-2"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <div className="mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Input
+                                    </label>
+                                    <textarea
+                                        {...register(`testCases.${index}.input`, { required: "Input is required" })}
+                                        className="w-full shadow-sm border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-100 dark:text-gray-100"
+                                        placeholder="Enter the input for the test case"
+                                    />
+                                    {errors.testCases?.[index]?.input && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.testCases[index].input.message}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Output
+                                    </label>
+                                    <textarea
+                                        {...register(`testCases.${index}.output`, { required: "Output is required" })}
+                                        className="w-full shadow-sm border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-100 dark:text-gray-100"
+                                        placeholder="Enter the expected output"
+                                    />
+                                    {errors.testCases?.[index]?.output && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.testCases[index].output.message}</p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                        {testCaseFields.length === 0 && <p className="text-red-500 text-xs mt-1">At least one test case is required</p>}
+                        <button
+                            type="button"
+                            onClick={() => appendTestCase({ input: '', output: '' })}
+                            className="mt-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            + Add Test Case
+                        </button>
+                    </div>
+
                     <div className="flex justify-end">
                         <button
                             type="submit"
