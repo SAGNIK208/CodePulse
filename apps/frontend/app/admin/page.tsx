@@ -7,7 +7,6 @@ import ReactMarkdown from 'react-markdown';
 import { useForm, useFieldArray } from 'react-hook-form';
 import Layout from '../../components/Layout';
 import axios from 'axios';
-import { title } from 'process';
 
 const links = [
     { href: "/", label: "Home" },
@@ -18,7 +17,7 @@ const PROBLEM_SERVICE_URL = process.env.NEXT_PUBLIC_PROBLEM_SERVICE_URL;
 
 
 // Mock data and types
-const languages = ["JavaScript", "Java", "C++", "Python"] as const;
+const languages = ["JavaScript", "JAVA", "CPP", "PYTHON"] as const;
 type Language = (typeof languages)[number];
 type Difficulty = "Easy" | "Medium" | "Hard";
 
@@ -87,11 +86,11 @@ const AdminAddProblemPage = () => {
                 title:data.title,
                 testCases:data.testCases,
                 description:data.description,
-                difficulty:data.difficulty,
+                difficulty:data.difficulty.toLocaleLowerCase(),
                 editorial:data.editorial,
-
+                codeStubs:data.codeStubs
             }
-            const response = await axios.post(`${PROBLEM_SERVICE_URL}/problems`, data);
+            const response = await axios.post(`${PROBLEM_SERVICE_URL}/problems`, payload);
             if (response.status >= 200 && response.status < 300) {
                 showTicker('Problem added successfully!', 'success');
             } else {

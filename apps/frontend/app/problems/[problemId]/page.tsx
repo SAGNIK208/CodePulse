@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import  Button  from "@repo/ui/button" // Assuming you have shadcn/ui
 import Layout from "../../../components/Layout"; // Import your Layout component
 import { io, Socket } from 'socket.io-client';
+import axios from "axios";
 
 const links = [
   { href: "/", label: "Home" },
@@ -63,25 +64,22 @@ const ProblemPage = () => {
   const router = useRouter();
   const [problem, setProblem] = useState<Problem | null>(null);
   const [activeTab, setActiveTab] = useState<"Description" | "Editorial">("Description");
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>("JavaScript");
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("Java");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState<Socket | null>(null);
-  const userId = "user123"; // Replace with actual user ID retrieval logic
+  const userId = "user123";
 
   useEffect(() => {
-    // Establish Socket.IO connection
-    const newSocket = io(SOCKET_SERVICE_URL); // Replace with your socket server URL
+    const newSocket = io(SOCKET_SERVICE_URL);
     setSocket(newSocket);
 
     newSocket.emit('setUserId', userId);
 
     newSocket.on('submissionPayloadResponse', (payload) => {
       console.log('Submission Response:', payload);
-      // Handle the submission response here (e.g., show results)
     });
 
-    // Clean up the socket connection on unmount
     return () => {
       newSocket.disconnect();
     };
@@ -91,16 +89,10 @@ const ProblemPage = () => {
     const fetchProblem = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${PROBLEM_SERVICE_URL}/problems/${problemId}`);
-        if (!response.ok) {
-          console.error(`Failed to fetch problem: ${response.status}`);
-          setLoading(false);
-          return;
-        }
-        const data: Problem = await response.json();
+        const response = await axios.get(`${PROBLEM_SERVICE_URL}/problems/${problemId}`);
+        const data: Problem = await response.data.data;
         setProblem(data);
 
-        // Set initial code based on the first code stub for the default language
         const defaultLanguageStub = data.codeStubs.find(
           (stub) => stub.language === languageCodeMap[selectedLanguage]
         );
@@ -142,35 +134,22 @@ const ProblemPage = () => {
     }
 
     try {
-      const response = await fetch(`${SUBMISSION_SERVICE_URL}/api/v1/submissions`, {
-        method: 'POST',
+      const payload = {
+        userId: userId,
+        language: languageCodeMap[selectedLanguage],
+        code: code,
+        problemId: problemId,
+      }
+      const response = await axios.post(`${SUBMISSION_SERVICE_URL}/api/v1/submissions`, payload,{
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: userId,
-          language: languageCodeMap[selectedLanguage],
-          code: code,
-          problemId: problem.id,
-        }),
       });
-
-      if (!response.ok) {
-        console.error(`Submission failed: ${response.status}`);
-        const errorData = await response.json();
-        console.error("Submission error details:", errorData);
-        // Optionally show an error message to the user
-        return;
-      }
-
-      const submissionResult = await response.json();
+      const submissionResult = await response.data;
       console.log("Submission successful:", submissionResult);
-      // Optionally show a success message or redirect the user
-      // The 'submissionPayloadResponse' event from the socket will also be triggered.
 
     } catch (error) {
       console.error("Error submitting code:", error);
-      // Optionally show an error message to the user
     }
   };
 
@@ -276,10 +255,14 @@ const ProblemPage = () => {
                 onChange={(value) => setCode(value || "")}
                 options={{
                   minimap: { enabled: false },
-                  lineNumbers: 'on',
+                  lineNumbers: "on",
                   selectOnLineNumbers: false,
                   readOnly: false,
-                  scrollbar: { vertical: 'auto', horizontal: 'auto' },
+                  scrollbar: { vertical: "auto", horizontal: "auto" },
+                  quickSuggestions: false,
+                  suggestOnTriggerCharacters: false,
+                  hover: { enabled: false },
+                  renderValidationDecorations: "off",
                 }}
                 className="flex-1"
               />

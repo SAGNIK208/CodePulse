@@ -3,16 +3,18 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import Redis from "ioredis";
 import bodyParser from "body-parser";
+import cors from "cors";
 
 const app:Express = express();
 app.use(bodyParser.json());
+app.use(cors());
 
 const httpServer = createServer(app);
 const redisCache = new Redis();
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5500",
+    origin: "http://localhost:3002",
     methods: ["GET", "POST"],
   },
 });

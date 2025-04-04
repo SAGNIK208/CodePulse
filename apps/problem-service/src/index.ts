@@ -4,6 +4,7 @@ import connectToDB from "@repo/db/connect";
 import bodyParser from "body-parser";
 import { apiRouter } from "./routes";
 import errorHandler from "./utils/errorHandler";
+import cors from "cors";
 
 const app:Express = express();
 
@@ -11,6 +12,7 @@ const app:Express = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
+app.use(cors());
 
 // API Routes
 app.use("/api", apiRouter);

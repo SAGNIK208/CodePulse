@@ -13,7 +13,7 @@ type Problem = {
   title : string,
   difficulty : string,
   tags: string[]
-  id: string | number
+  _id: string | number
 }
 
 const defaultProblems = [
@@ -48,7 +48,7 @@ const defaultProblems = [
 async function fetchProblems(){
   try{
     const response = await axios.get(`${PROBLEM_SERVICE_URL}/problems`);
-    return response.data;
+    return response.data.data;
   }catch(error){
     return defaultProblems;
   }
@@ -77,14 +77,14 @@ export default async function ProblemsPage() {
                   {problems.map((problem, index) => (
                     <tr key={index} className="border-t">
                       <td className="p-3 text-blue-600 font-medium hover:underline cursor-pointer">
-                       <Link href={`/problems/${problem.id}`}>{problem.title}</Link> 
+                       <Link href={`/problems/${problem._id}`}>{problem.title}</Link> 
                       </td>
                       <td className="p-3">
                         <Badge
                           className={
-                            problem.difficulty === "Easy"
+                            problem.difficulty === "easy"
                               ? "bg-green-200 text-green-800"
-                              : problem.difficulty === "Medium"
+                              : problem.difficulty === "medium"
                                 ? "bg-yellow-200 text-yellow-800"
                                 : "bg-red-200 text-red-800"
                           }
@@ -92,7 +92,7 @@ export default async function ProblemsPage() {
                           {problem.difficulty}
                         </Badge>
                       </td>
-                      <td className="p-3 flex flex-wrap gap-2">
+                      {problem?.tags && <td className="p-3 flex flex-wrap gap-2">
                         {problem.tags.map((tag, i) => (
                           <Badge
                             key={i}
@@ -101,7 +101,7 @@ export default async function ProblemsPage() {
                             {tag}
                           </Badge>
                         ))}
-                      </td>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>
