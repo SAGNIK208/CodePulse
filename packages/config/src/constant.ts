@@ -7,6 +7,7 @@ export const NODE_ENV = process.env.NODE_ENV || "dev";
 export const PYTHON_IMAGE = 'python:3.8-slim';
 export const JAVA_IMAGE = 'openjdk:11-jdk-slim';
 export const CPP_IMAGE = 'gcc:latest';
+export const JAVASCRIPT_IMAGE = 'node:latest';
 export const DOCKER_STREAM_HEADER_SIZE = 8;
 export const SUBMISSION_QUEUE = 'SubmissionQueue';
 export const SAMPLE_QUEUE = 'SampleQueue';

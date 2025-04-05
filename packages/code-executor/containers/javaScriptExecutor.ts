@@ -1,5 +1,5 @@
-import { JAVA_IMAGE } from '@repo/config/constant';
 import logger from '@repo/config/loggerConfig';
+import { JAVASCRIPT_IMAGE } from '@repo/config/constant';
 import {
   CodeExecutorStrategy,
   ExecutionResponse,
@@ -9,7 +9,7 @@ import createContainer from './containerFactory';
 import { fetchDecodedStream } from './dockerHelper';
 import pullImage from './pullImage';
 
-class JavaExecutor implements CodeExecutorStrategy {
+class JavaScriptExecutor implements CodeExecutorStrategy {
   async execute(
     code: string,
     inputTestCase: string,
@@ -18,37 +18,39 @@ class JavaExecutor implements CodeExecutorStrategy {
     logger.info(inputTestCase, outputTestCase);
     const rawLogBuffer: Buffer[] = [];
 
-    console.log('Initialising a new java docker container');
-    await pullImage(JAVA_IMAGE);
-    const runCommand = `echo '${code.replace(/'/g, `'\\"`)}' > Main.java && javac Main.java && echo '${inputTestCase.replace(/'/g, `'\\"`)}' | java Main`;
+    console.log('Initializing a new JavaScript docker container');
+    await pullImage(JAVASCRIPT_IMAGE);
+
+    const runCommand = `echo '${code.replace(/'/g, `'\\''`)}' > main.js && echo '${inputTestCase.replace(/'/g, `'\\''`)}' | node main.js`;
     console.log(runCommand);
-    const javaDockerContainer = await createContainer(JAVA_IMAGE, [
+
+    const jsDockerContainer = await createContainer(JAVASCRIPT_IMAGE, [
       '/bin/sh',
       '-c',
       runCommand,
     ]);
 
-    // starting / booting the corresponding docker container
-    await javaDockerContainer.start();
-
+    // Start the container
+    await jsDockerContainer.start();
     console.log('Started the docker container');
 
-    const loggerStream = await javaDockerContainer.logs({
+    const loggerStream = await jsDockerContainer.logs({
       stdout: true,
       stderr: true,
       timestamps: false,
-      follow: true, // whether the logs are streamed or returned as a string
+      follow: true,
     });
 
-    // Attach events on the stream objects to start and stop reading
     loggerStream.on('data', (chunk) => {
       rawLogBuffer.push(chunk);
     });
+
     try {
       const codeResponse: string = await fetchDecodedStream(
         loggerStream,
         rawLogBuffer,
       );
+
       if (codeResponse.trim() === outputTestCase.trim()) {
         return { output: codeResponse, status: 'SUCCESS' };
       } else {
@@ -57,13 +59,13 @@ class JavaExecutor implements CodeExecutorStrategy {
     } catch (error) {
       console.log('Error occurred', error);
       if (error === 'TLE') {
-        await javaDockerContainer.kill();
+        await jsDockerContainer.kill();
       }
       return { output: error as string, status: 'ERROR' };
     } finally {
-      await javaDockerContainer.remove();
+      await jsDockerContainer.remove();
     }
   }
 }
 
-export default JavaExecutor;
+export default JavaScriptExecutor;

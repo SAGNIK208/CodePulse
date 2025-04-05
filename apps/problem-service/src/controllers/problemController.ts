@@ -16,7 +16,10 @@ export const pingProblemController = (req: Request, res: Response): void => {
 
 export const getProblems = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const response = await problemService.getAllProblems();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const tags = req.query.tags ? (req.query.tags as string).split(',') : [];
+    const response = await problemService.getAllProblems({ page, limit, tags });
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Successfully fetched all the problems",
@@ -42,6 +45,21 @@ export const getProblem = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+export const getAllTags = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const tags = await problemService.getAllTags();
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Fetched all unique tags",
+      error: {},
+      data: tags,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 export const addProblem = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {

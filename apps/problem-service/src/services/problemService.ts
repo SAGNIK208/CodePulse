@@ -21,9 +21,19 @@ class ProblemService {
     return problem;
   }
 
-  async getAllProblems(): Promise<IProblem[]> {
-    return this.problemRepository.getAllProblems();
+  async getAllProblems(options: { page: number; limit: number; tags: string[] }):Promise<{
+    problems: IProblem[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    return this.problemRepository.getAllProblems(options);
   }
+  
+  async getAllTags(): Promise<string[]> {
+    return this.problemRepository.getAllTags();
+  }
+  
 
   async getProblem(problemId: string): Promise<IProblem> {
     const problem = await this.problemRepository.getProblemById(problemId);

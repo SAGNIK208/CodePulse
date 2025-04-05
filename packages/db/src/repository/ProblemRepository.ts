@@ -17,14 +17,44 @@ class ProblemRepository {
     }
   }
 
-  async getAllProblems(): Promise<IProblem[]> {
+  async getAllProblems({ page, limit, tags }: { page: number; limit: number; tags: string[] }): Promise<{
+    problems: IProblem[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
     try {
-      return await this.problemModel.find({});
+      const filter: any = {};
+      if (tags.length > 0) {
+        filter.tags = { $in: tags };
+      }
+      const [problems,total] = await Promise.all([this.problemModel
+            .find(filter)
+            .skip((page - 1) * limit)
+            .limit(limit),
+            this.problemModel.countDocuments(filter)]);
+      return {
+        problems,
+        total,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      };      
     } catch (error) {
       console.error("Error fetching all problems:", error);
       throw error;
     }
   }
+
+  async getAllTags(): Promise<string[]> {
+    try {
+      const tags: string[] = await this.problemModel.distinct("tags");
+      return tags;
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+      throw error;
+    }
+  }
+  
 
   async getProblemById(id: string): Promise<IProblem | null> {
     try {

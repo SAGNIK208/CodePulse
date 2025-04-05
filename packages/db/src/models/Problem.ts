@@ -6,7 +6,7 @@ export interface ITestCase {
 }
 
 export interface ICodeStub {
-  language: "CPP" | "JAVA" | "PYTHON";
+  language: "CPP" | "JAVA" | "PYTHON" | "JAVASCRIPT";
   startSnippet?: string;
   userSnippet?: string;
   endSnippet?: string;
@@ -19,6 +19,7 @@ export interface IProblem extends Document {
   testCases: ITestCase[];
   codeStubs: ICodeStub[];
   editorial?: string;
+  tags?: string[];
 }
 
 const problemSchema: Schema<IProblem> = new Schema(
@@ -47,7 +48,7 @@ const problemSchema: Schema<IProblem> = new Schema(
       {
         language: {
           type: String,
-          enum: ["CPP", "JAVA", "PYTHON"],
+          enum: ["CPP", "JAVA", "PYTHON","JAVASCRIPT"],
           required: true,
         },
         startSnippet: { type: String },
@@ -56,6 +57,7 @@ const problemSchema: Schema<IProblem> = new Schema(
       },
     ],
     editorial: { type: String },
+    tags: {type: Array<String>}
   },
   { timestamps: true }
 );
