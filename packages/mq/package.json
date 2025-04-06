@@ -20,7 +20,8 @@
     "@repo/typescript-config": "workspace:*",
     "@repo/redis": "workspace:*",
     "@repo/backend-common": "workspace:*",
-    "@repo/code-executor": "workspace:*"
+    "@repo/code-executor": "workspace:*",
+    "@repo/db": "workspace:*"
   },
   "keywords": [],
   "author": "",

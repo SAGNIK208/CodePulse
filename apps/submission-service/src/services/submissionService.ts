@@ -70,8 +70,7 @@ class SubmissionService {
       [submission._id.toString()]: {
         code: submission.code,
         language: submission.language,
-        inputCase: problemAdminApiResponse.data.testCases[0]?.input || "",
-        outputCase: problemAdminApiResponse.data.testCases[0]?.output || "",
+        testCases: problemAdminApiResponse.data.testCases || "",
         userId,
         submissionId: submission._id.toString(),
       },

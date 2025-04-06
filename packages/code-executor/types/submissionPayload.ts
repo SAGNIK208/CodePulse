@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ITestCase } from "@repo/db/models/Problem";
 export type SubmissionPayload = {
-  outputCase: any;
   code: string;
   language: string;
-  inputCase: string;
+  testCases: ITestCase[];
   userId: string;
   submissionId: string;
 };

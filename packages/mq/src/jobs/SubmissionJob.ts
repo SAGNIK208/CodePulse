@@ -4,6 +4,7 @@ import { IJob } from '../types/bullMQJobDefination';
 import { SubmissionPayload } from '@repo/code-executor/types/submissionPayload';
 import createExecutor from '@repo/code-executor/executorFactory';
 import { ExecutionResponse } from '@repo/code-executor/types/CodeExecutorStrategy';
+import { ITestCase } from "@repo/db/models/Problem";
 import evaluationQueueProducer from '../producers/evaluationQueueProducer';
 export default class SubmissionJob implements IJob {
   name: string;
@@ -33,7 +34,7 @@ export default class SubmissionJob implements IJob {
       }
   
       // Destructure safely
-      const { language: codeLanguage, code, inputCase: inputTestCase, outputCase: outputTestCase, userId, submissionId } = submission;
+      const { language: codeLanguage, code, testCases, userId, submissionId } = submission;
       console.log(userId,submissionId);
       const strategy = createExecutor(codeLanguage);
       console.log(strategy);
@@ -41,8 +42,7 @@ export default class SubmissionJob implements IJob {
       if (strategy != null) {
         const response: ExecutionResponse = await strategy.execute(
           code,
-          inputTestCase,
-          outputTestCase,
+          testCases
         );
   
         evaluationQueueProducer({

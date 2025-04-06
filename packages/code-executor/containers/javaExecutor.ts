@@ -3,65 +3,74 @@ import logger from '@repo/config/loggerConfig';
 import {
   CodeExecutorStrategy,
   ExecutionResponse,
+  TestCaseResults,
 } from '../types/CodeExecutorStrategy';
 
 import createContainer from './containerFactory';
 import { fetchDecodedStream } from './dockerHelper';
 import pullImage from './pullImage';
+import { ITestCase } from '@repo/db/models/Problem';
 
 class JavaExecutor implements CodeExecutorStrategy {
   async execute(
     code: string,
-    inputTestCase: string,
-    outputTestCase: string,
+    testCases:ITestCase[]
   ): Promise<ExecutionResponse> {
-    logger.info(inputTestCase, outputTestCase);
-    const rawLogBuffer: Buffer[] = [];
-
-    console.log('Initialising a new java docker container');
+    logger.info(testCases);
+    let results : TestCaseResults [] = [];
     await pullImage(JAVA_IMAGE);
-    const runCommand = `echo '${code.replace(/'/g, `'\\"`)}' > Main.java && javac Main.java && echo '${inputTestCase.replace(/'/g, `'\\"`)}' | java Main`;
-    console.log(runCommand);
-    const javaDockerContainer = await createContainer(JAVA_IMAGE, [
-      '/bin/sh',
-      '-c',
-      runCommand,
-    ]);
-
-    // starting / booting the corresponding docker container
-    await javaDockerContainer.start();
-
-    console.log('Started the docker container');
-
-    const loggerStream = await javaDockerContainer.logs({
-      stdout: true,
-      stderr: true,
-      timestamps: false,
-      follow: true, // whether the logs are streamed or returned as a string
-    });
-
-    // Attach events on the stream objects to start and stop reading
-    loggerStream.on('data', (chunk) => {
-      rawLogBuffer.push(chunk);
-    });
-    try {
-      const codeResponse: string = await fetchDecodedStream(
-        loggerStream,
-        rawLogBuffer,
-      );
-      if (codeResponse.trim() === outputTestCase.trim()) {
-        return { output: codeResponse, status: 'SUCCESS' };
-      } else {
-        return { output: codeResponse, status: 'WA' };
+    for(const testCase of testCases){
+      const rawLogBuffer: Buffer[] = [];
+      let inputTestCase = testCase.input;
+      let outputTestCase = testCase.output; 
+      const runCommand = `echo '${code.replace(/'/g, `'\\"`)}' > Main.java && javac Main.java && echo '${inputTestCase.replace(/'/g, `'\\"`)}' | java Main`;
+      console.log(runCommand);
+      console.log('Initialising a new java docker container');
+      const javaDockerContainer = await createContainer(JAVA_IMAGE, [
+        '/bin/sh',
+        '-c',
+        runCommand,
+      ]);
+  
+      // starting / booting the corresponding docker container
+      await javaDockerContainer.start();
+  
+      console.log('Started the docker container');
+  
+      const loggerStream = await javaDockerContainer.logs({
+        stdout: true,
+        stderr: true,
+        timestamps: false,
+        follow: true, // whether the logs are streamed or returned as a string
+      });
+  
+      // Attach events on the stream objects to start and stop reading
+      loggerStream.on('data', (chunk) => {
+        rawLogBuffer.push(chunk);
+      });
+      try {
+        const codeResponse: string = await fetchDecodedStream(
+          loggerStream,
+          rawLogBuffer,
+        );
+        if (codeResponse.trim() === outputTestCase.trim()) {
+          results.push({ output: codeResponse, status: 'SUCCESS' });
+        } else {
+          results.push({ output: codeResponse, status: 'WA' });
+        }
+      } catch (error) {
+        console.log('Error occurred', error);
+        if (error === 'TLE') {
+          await javaDockerContainer.kill();
+        }
+        results.push({ output: error as string, status: 'ERROR' });
+      } finally {
+        await javaDockerContainer.remove();
       }
-    } catch (error) {
-      console.log('Error occurred', error);
-      if (error === 'TLE') {
-        await javaDockerContainer.kill();
-      }
-      return { output: error as string, status: 'ERROR' };
-    } finally {
-      await javaDockerContainer.remove();
+    }
+    return {
+      testCaseResults:results,
+      status:results.every((r)=>r.status==="SUCCESS")? "SUCCESS" : "WA"
     }
   }
 }

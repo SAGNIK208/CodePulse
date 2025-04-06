@@ -1,9 +1,11 @@
+import { ITestCase } from "@repo/db/models/Problem";
+
 export interface CodeExecutorStrategy {
   execute(
     code: string,
-    inputTestCase: string,
-    outputTestCase: string,
+    testCases: ITestCase[]
   ): Promise<ExecutionResponse>;
 }
 
-export type ExecutionResponse = { output: string; status: string };
+export type ExecutionResponse = { testCaseResults:TestCaseResults[],status:string };
+export type TestCaseResults = {output:string,status: string}

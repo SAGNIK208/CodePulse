@@ -11,6 +11,7 @@
     "@repo/backend-common": "workspace:*",
     "@repo/config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@repo/db":"workspace:*",
     "@types/dockerode": "^3.3.35"
   },
   "exports": {
