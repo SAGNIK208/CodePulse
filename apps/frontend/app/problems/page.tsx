@@ -15,6 +15,7 @@ type Problem = {
 };
 
 const defaultProblems: Problem[] = [
+  // ... (default problems remain the same)
   { title: "Two Sum", difficulty: "Easy", tags: ["Array", "Hash Table"], _id: 0 },
   { title: "Add Two Numbers", difficulty: "Medium", tags: ["Linked List", "Math"], _id: 1 },
   {
@@ -38,111 +39,130 @@ const defaultProblems: Problem[] = [
   { title: "Valid Parentheses", difficulty: "Easy", tags: ["String", "Stack"], _id: 5 },
 ];
 
-// Define the structure of the object *resolved* by the searchParams Promise
+// --- Interfaces (remain the same) ---
 interface ProblemsPageResolvedSearchParams {
-  page?: string; // Assuming page is always a single string if present
-  tags?: string | string[]; // Tags could be single string or array from URL
+  page?: string;
+  tags?: string | string[];
+  difficulty?: string;
+  sort?: string;
 }
 
-// Define the props where searchParams is a Promise wrapping the resolved type
 interface ProblemsPageProps {
-  // Assuming params might also be needed/passed by Next.js, even if empty
-  // params: Promise<{}>; // Or specific type if you have route params
   searchParams: Promise<ProblemsPageResolvedSearchParams>;
 }
 
-
+// --- Data Fetching Functions (remain the same) ---
 async function fetchProblems({
   page = 1,
   tags = [],
+  difficulty = "",
+  sort = "",
 }: {
   page?: number;
   tags?: string[];
+  difficulty?: string;
+  sort?: string;
 }) {
   try {
     const params = new URLSearchParams();
     params.set("page", page.toString());
     if (tags.length) params.set("tags", tags.join(","));
+    if (difficulty) params.set("difficulty", difficulty);
+    if (sort) params.set("sort", sort);
 
     if (!PROBLEM_SERVICE_URL) {
-        console.error("PROBLEM_SERVICE_URL is not defined.");
-        throw new Error("Problem service URL is missing.");
+      throw new Error("PROBLEM_SERVICE_URL is not defined.");
     }
-
     const response = await axios.get(`${PROBLEM_SERVICE_URL}/problems?${params}`);
-
-    if (response.data && typeof response.data === 'object' && response.data.data) {
-         return {
-            problems: response.data.data.problems || [],
-            totalPages: response.data.data.totalPages || 0,
-            currentPage: response.data.data.currentPage || 1,
-         };
-    } else {
-        console.error("Unexpected response structure from fetchProblems:", response.data);
-        throw new Error("Invalid data structure received.");
-    }
-
+    if (response.data?.data) {
+      return {
+        problems: response.data.data.problems || [],
+        totalPages: response.data.data.totalPages || 0,
+        currentPage: response.data.data.currentPage || 1,
+      };
+    } else { throw new Error("Invalid data structure received."); }
   } catch (error) {
     console.error("Failed to fetch problems:", error);
-    return {
-      problems: defaultProblems,
-      totalPages: 1,
-      currentPage: 1,
-    };
+    return { problems: defaultProblems, totalPages: 1, currentPage: 1 };
   }
 }
 
-let tagListCache: string[] | null = null; // Basic cache for tags
-
+let tagListCache: string[] | null = null;
 async function fetchTags(): Promise<string[]> {
-    if (tagListCache) {
-        return tagListCache;
-    }
-     try {
-      if (PROBLEM_SERVICE_URL) {
-          const res = await axios.get(`${PROBLEM_SERVICE_URL}/problems/tags`);
-          if (res.data && Array.isArray(res.data.data)) {
-            tagListCache = res.data.data; // Cache the result
-            if(tagListCache == null) return [];
-            return tagListCache;
-          } else {
-             console.error("Unexpected response structure from fetch tags:", res.data);
-             return []; // Return empty on unexpected structure
-          }
-      } else {
-          console.error("PROBLEM_SERVICE_URL is not defined for fetching tags.");
-          return []; // Return empty if URL missing
-      }
-  } catch (error) {
-      console.error("Failed to fetch tags:", error);
-      return []; // Return empty on error
-  }
+  // This logic can be simplified/improved based on caching needs
+  if (tagListCache && tagListCache.length > 0) return tagListCache;
+  try {
+    if (!PROBLEM_SERVICE_URL) throw new Error("Missing PROBLEM_SERVICE_URL");
+    const res = await axios.get(`${PROBLEM_SERVICE_URL}/problems/tags`);
+    if (Array.isArray(res.data?.data)) {
+      tagListCache = res.data.data;
+      if(tagListCache == null) return [];
+      return tagListCache;
+    } return [];
+  } catch (error) { console.error("Failed to fetch tags:", error); return []; }
 }
 
-
-// Apply the Promise<searchParams> props type
+// --- Main Server Component ---
 export default async function ProblemsPage({ searchParams }: ProblemsPageProps) {
+  const resolved = await searchParams;
+  const currentDifficulty = resolved.difficulty || "";
+  const currentSort = resolved.sort || "";
+  const currentPageNum = parseInt(resolved.page || "1", 10);
 
-  // --- Await the searchParams Promise first ---
-  const resolvedSearchParams = await searchParams;
-  // --- Use the resolved object from here on ---
-
-  const page = parseInt(resolvedSearchParams.page || "1", 10);
-
-  const tagsParam = resolvedSearchParams.tags;
-  const tags = tagsParam
-    ? (Array.isArray(tagsParam) ? tagsParam : tagsParam.split(',')).filter(Boolean)
+  const tagsParam = resolved.tags;
+  const currentTags = tagsParam
+    ? (Array.isArray(tagsParam) ? tagsParam : tagsParam.split(",")).filter(Boolean)
     : [];
 
-  // Fetch problems and tags concurrently
-  const [
-      { problems = [], totalPages = 0, currentPage = 1 },
-      tagList = []
-    ] = await Promise.all([
-        fetchProblems({ page, tags }),
-        fetchTags() // Fetch tags using the separate function
-    ]);
+  const [{ problems, totalPages, currentPage }, tagList] = await Promise.all([
+    fetchProblems({ page: currentPageNum, tags: currentTags, difficulty: currentDifficulty, sort: currentSort }),
+    fetchTags(),
+  ]);
 
+  // --- Helper to build query strings ---
+  // Preserves existing filters when generating links for new ones
+  const buildQueryString = (newParams: Record<string, string | string[] | number | undefined>) => {
+    const currentQS = new URLSearchParams();
+    // Start with current filters
+    if (currentTags.length > 0) currentQS.set('tags', currentTags.join(','));
+    if (currentDifficulty) currentQS.set('difficulty', currentDifficulty);
+    if (currentSort) currentQS.set('sort', currentSort);
+
+    // Apply new/updated params
+    for (const key in newParams) {
+        const value = newParams[key];
+        if (value !== undefined && value !== null && value !== '') {
+             // Special handling for arrays like tags if needed, otherwise join
+             if (Array.isArray(value)) {
+                 currentQS.set(key, value.join(','));
+             } else {
+                 currentQS.set(key, String(value));
+             }
+        } else {
+            currentQS.delete(key); // Remove param if value is explicitly undefined/null/empty
+        }
+    }
+    // Always reset page to 1 when filters/sort change, unless page is the specific param being set
+    if (!('page' in newParams)) {
+        currentQS.set('page', '1');
+    } else if(newParams.page === undefined || newParams.page === null || newParams.page === '') {
+         currentQS.set('page', '1'); // Ensure page is set if cleared
+    }
+
+    const qs = currentQS.toString();
+    return qs ? `?${qs}` : ''; // Return empty string if no params
+  };
+
+  // --- Define Sort Options ---
+  const sortOptions = [
+    { label: "Default", value: "" }, // Value to clear sorting
+    { label: "Difficulty ↑", value: "difficulty:easy-to-hard" },
+    { label: "Difficulty ↓", value: "difficulty:hard-to-easy" },
+    { label: "Title A-Z", value: "title:asc" },
+    { label: "Title Z-A", value: "title:desc" },
+    { label: "Newest", value: "createdAt:desc" },
+    { label: "Oldest", value: "createdAt:asc" },
+  ];
 
   return (
     <Layout links={links}>
@@ -150,113 +170,142 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
         <div className="w-full max-w-4xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Coding Problems</h1>
-            <Link href={"/admin"}>
+            <Link href="/admin">
               <Button variant="primary">Add Problem</Button>
             </Link>
           </div>
 
-          {/* Tags filter */}
+           {/* Tags Filter */}
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            {tagList.map((tag) => {
-              const isActive = tags.includes(tag);
-              const newTags = isActive
-                ? tags.filter((t) => t !== tag)
-                : [...tags, tag];
-              const href = `?page=1&tags=${newTags.join(",")}`;
+             <span className="text-sm font-medium mr-2">Tags:</span>
+             {tagList.map((tag) => {
+              const isActive = currentTags.includes(tag);
+              const newTags = isActive ? currentTags.filter((t) => t !== tag) : [...currentTags, tag];
+              const href = buildQueryString({ tags: newTags.length > 0 ? newTags : undefined }); // Pass undefined to clear
 
               return (
-                <Link href={href} key={tag}>
-                  <Badge
-                    className={`cursor-pointer transition ${
-                      isActive
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                    }`}
-                  >
+                <Link key={tag} href={href}>
+                  <Badge className={`cursor-pointer ${isActive ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"}`}>
                     {tag}
                   </Badge>
                 </Link>
               );
             })}
-            {tags.length > 0 && (
-              <Link href="?page=1">
-                <Badge className="bg-red-200 text-red-800 cursor-pointer hover:bg-red-300">
-                  Clear Filters
-                </Badge>
+            {currentTags.length > 0 && (
+              <Link href={buildQueryString({ tags: undefined })}>
+                <Badge className="bg-red-200 text-red-800 hover:bg-red-300 cursor-pointer text-xs">Clear Tags</Badge>
               </Link>
             )}
           </div>
 
-          {/* Problems Table */}
-          {Array.isArray(problems) && problems.length > 0 ? (
-            <div className="bg-white dark:bg-gray-900 shadow-md rounded-lg overflow-hidden">
-              <table className="w-full border-collapse">
-                 <thead>
-                  <tr className="bg-gray-100 dark:bg-gray-800">
-                    <th className="p-3 text-left">Title</th>
-                    <th className="p-3 text-left">Difficulty</th>
-                    <th className="p-3 text-left">Tags</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {problems.map((problem: Problem, index: number) => (
-                    <tr
-                      key={problem._id || index}
-                      className="border-t hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition"
-                    >
-                      <td className="p-3 text-blue-600 font-medium hover:underline">
-                        <Link href={`/problems/${problem._id}`}>{problem.title}</Link>
-                      </td>
-                      <td className="p-3">
-                        <Badge
-                          className={
-                            problem.difficulty.toLowerCase() === "easy"
-                              ? "bg-green-200 text-green-800"
-                              : problem.difficulty.toLowerCase() === "medium"
-                              ? "bg-yellow-200 text-yellow-800"
-                              : "bg-red-200 text-red-800"
-                          }
-                        >
-                          {problem.difficulty}
-                        </Badge>
-                      </td>
-                      <td className="p-3 flex flex-wrap gap-2">
-                        {Array.isArray(problem.tags) && problem.tags.map((tag: string, i: number) => (
-                          <Badge
-                            key={i}
-                            className="bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Filters Row */}
+          <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
+            {/* Difficulty Filter */}
+            <div className="flex gap-2 flex-wrap items-center">
+              <span className="text-sm font-medium mr-2">Difficulty:</span>
+              {["Easy", "Medium", "Hard"].map((level) => {
+                const lowerLevel = level.toLowerCase();
+                const isActive = currentDifficulty === lowerLevel;
+                const href = buildQueryString({ difficulty: isActive ? undefined : lowerLevel });
+
+                return (
+                  <Link key={level} href={href}>
+                    <Badge className={`cursor-pointer ${isActive ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"}`}>
+                      {level}
+                    </Badge>
+                  </Link>
+                );
+              })}
+              {currentDifficulty && (
+                <Link href={buildQueryString({ difficulty: undefined })}>
+                  <Badge className="bg-red-200 text-red-800 hover:bg-red-300 cursor-pointer text-xs">Clear</Badge>
+                </Link>
+              )}
             </div>
+
+            {/* --- Sort Options as Links/Badges --- */}
+            <div className="flex gap-2 flex-wrap items-center">
+               <span className="text-sm font-medium mr-2">Sort By:</span>
+               {sortOptions.map((option) => {
+                  const isActive = currentSort === option.value;
+                  // Pass undefined for the 'Default' option's value to clear sort param
+                  const href = buildQueryString({ sort: option.value || undefined });
+
+                  return (
+                    <Link key={option.value} href={href}>
+                       <Badge className={`cursor-pointer ${isActive ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"}`}>
+                         {option.label}
+                       </Badge>
+                    </Link>
+                  );
+               })}
+            </div>
+             {/* --- End Sort Options --- */}
+
+          </div>
+
+          {/* Problems Table */}
+           {problems.length > 0 ? (
+             <div className="bg-white dark:bg-gray-900 shadow-md rounded-lg overflow-hidden">
+               <table className="w-full">
+                 <thead className="bg-gray-100 dark:bg-gray-800">
+                   <tr>
+                     <th className="p-3 text-left">Title</th>
+                     <th className="p-3 text-left">Difficulty</th>
+                     <th className="p-3 text-left">Tags</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {problems.map((problem:Problem) => (
+                     <tr key={problem._id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-800">
+                       <td className="p-3 text-blue-600 hover:underline">
+                         <Link href={`/problems/${problem._id}`}>{problem.title}</Link>
+                       </td>
+                       <td className="p-3">
+                         <Badge className={ /* ... difficulty badge class ... */
+                           problem.difficulty.toLowerCase() === "easy"
+                             ? "bg-green-200 text-green-800"
+                             : problem.difficulty.toLowerCase() === "medium"
+                             ? "bg-yellow-200 text-yellow-800"
+                             : "bg-red-200 text-red-800"
+                         }>
+                           {problem.difficulty}
+                         </Badge>
+                       </td>
+                       <td className="p-3 flex flex-wrap gap-2">
+                         {Array.isArray(problem.tags) && problem.tags.map((tag, i) => (
+                           <Badge key={i} className="bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                             {tag}
+                           </Badge>
+                         ))}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
            ) : (
-             <p className="text-center text-gray-500 dark:text-gray-400 mt-4">No problems found or failed to load.</p>
+             <p className="text-center text-gray-500 dark:text-gray-400 mt-4">No problems found matching your criteria.</p>
            )}
 
+
           {/* Pagination */}
-          { totalPages > 0 && (
+           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 mt-6">
-                {currentPage > 1 && (
-                <Link href={`?page=${currentPage - 1}&tags=${tags.join(",")}`}>
-                    <Button variant="secondary">Previous</Button>
+              {currentPage > 1 && (
+                <Link href={buildQueryString({ page: currentPage - 1 })}>
+                  <Button variant="secondary">Previous</Button>
                 </Link>
-                )}
-                <span>
-                Page {currentPage} of {totalPages}
-                </span>
-                {currentPage < totalPages && (
-                <Link href={`?page=${currentPage + 1}&tags=${tags.join(",")}`}>
-                    <Button variant="secondary">Next</Button>
+              )}
+              <span>Page {currentPage} of {totalPages}</span>
+              {currentPage < totalPages && (
+                <Link href={buildQueryString({ page: currentPage + 1 })}>
+                  <Button variant="secondary">Next</Button>
                 </Link>
-                )}
+              )}
             </div>
           )}
+
         </div>
       </div>
     </Layout>

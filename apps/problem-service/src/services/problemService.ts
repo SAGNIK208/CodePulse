@@ -21,7 +21,13 @@ class ProblemService {
     return problem;
   }
 
-  async getAllProblems(options: { page: number; limit: number; tags: string[] }):Promise<{
+  async getAllProblems(options: {
+    page: number;
+    limit: number;
+    tags: string[];
+    difficulty?: string;
+    sort?: string;
+  }): Promise<{
     problems: IProblem[];
     total: number;
     totalPages: number;

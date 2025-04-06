@@ -16,10 +16,20 @@ export const pingProblemController = (req: Request, res: Response): void => {
 
 export const getProblems = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
     const tags = req.query.tags ? (req.query.tags as string).split(',') : [];
-    const response = await problemService.getAllProblems({ page, limit, tags });
+    const difficulty = req.query.difficulty as string | undefined;
+    const sort = req.query.sort as string | undefined;
+
+    const response = await problemService.getAllProblems({
+      page,
+      limit,
+      tags,
+      difficulty,
+      sort,
+    });
+
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Successfully fetched all the problems",
