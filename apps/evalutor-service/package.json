@@ -1,0 +1,28 @@
+{
+  "name": "evalutor-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node --env-file=.env --env-file=../../.env dist/index.js",
+    "dev": "pnpm build && pnpm start"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
+    "http-status-codes": "^2.3.0"
+  },
+  "devDependencies": {
+    "@repo/backend-common": "workspace:*",
+    "@repo/config": "workspace:*",
+    "@repo/mq": "workspace:*",
+    "@repo/redis": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^5.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

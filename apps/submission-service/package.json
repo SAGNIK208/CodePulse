@@ -1,0 +1,29 @@
+{
+  "name": "submission-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node --env-file=.env --env-file=../../.env dist/index.js",
+    "dev": "pnpm build && pnpm start"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.0",
+    "@repo/backend-common": "workspace:*",
+    "@repo/mq": "workspace:*",
+    "@repo/redis": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/errors": "workspace:*",
+    "fastify": "^5.2.1",
+    "fastify-plugin": "^5.0.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/node": "^22.13.9"
+  }
+}

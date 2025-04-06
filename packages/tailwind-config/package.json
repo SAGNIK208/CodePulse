@@ -1,0 +1,15 @@
+{
+  "name": "@repo/tailwind-config",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./*": "./*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

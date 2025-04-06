@@ -1,0 +1,1 @@
+{"root":["./src/app.ts","./src/index.ts","./src/controllers/submissioncontroller.ts","./src/respository/repositoryplugin.ts","./src/routes/apiroutes.ts","./src/routes/v1/submissionroutes.ts","./src/routes/v1/v1routes.ts","./src/services/serviceplugin.ts","./src/services/submissionservice.ts"],"version":"5.8.2"}

@@ -1,27 +1,27 @@
-import { type JSX } from "react";
+'use client';
+import { motion } from 'framer-motion';
 
-export function Card({
-  className,
-  title,
-  children,
-  href,
-}: {
+type CardProps = {
+  title?: string;
+  description?: string;
+  children?: React.ReactNode;
   className?: string;
-  title: string;
-  children: React.ReactNode;
-  href: string;
-}): JSX.Element {
-  return (
-    <a
-      className={className}
-      href={`${href}?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo"`}
-      rel="noopener noreferrer"
-      target="_blank"
-    >
-      <h2>
-        {title} <span>-&gt;</span>
-      </h2>
-      <p>{children}</p>
-    </a>
-  );
-}
+};
+
+const Card: React.FC<CardProps> = ({ title, description, children, className }) => (
+  <motion.div 
+    whileHover={{ scale: 1.05 }} 
+    className={`p-6 bg-white shadow-lg rounded-lg ${className}`}
+  >
+    {children ? (
+      children
+    ) : (
+      <>
+        <h4 className="text-xl font-semibold">{title}</h4>
+        <p className="text-gray-600 mt-2">{description}</p>
+      </>
+    )}
+  </motion.div>
+);
+
+export default Card;
