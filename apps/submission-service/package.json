@@ -4,18 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "ncc build src/index.ts -o dist",
     "start": "node --env-file=.env --env-file=../../.env dist/index.js",
     "dev": "pnpm build && pnpm start"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.0",
     "@repo/backend-common": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/errors": "workspace:*",
     "@repo/mq": "workspace:*",
     "@repo/redis": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@repo/db": "workspace:*",
-    "@repo/errors": "workspace:*",
+    "@vercel/ncc": "^0.38.3",
     "fastify": "^5.2.1",
     "fastify-plugin": "^5.0.1"
   },

@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "ncc build src/index.ts -o dist",
     "start": "node --env-file=.env --env-file=../../.env dist/index.js",
     "dev": "pnpm build && pnpm start"
   },
   "dependencies": {
+    "@vercel/ncc": "^0.38.3",
     "body-parser": "^1.20.3",
     "express": "^4.21.2",
     "http-status-codes": "^2.3.0"

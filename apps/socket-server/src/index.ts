@@ -14,7 +14,7 @@ const redisCache = new Redis();
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3002",
+    origin: ["http://localhost:3002","http://16.170.215.122"],
     methods: ["GET", "POST"],
   },
 });
