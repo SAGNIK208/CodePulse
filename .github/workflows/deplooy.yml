@@ -135,6 +135,6 @@ jobs:
 
             cd frontend/apps/frontend
             pm2 delete frontend || true
-            pm2 start "PORT=3002 node server.js" --name frontend
+            pm2 start "PORT=3003 node server.js" --name frontend
             cd ../../..
           EOF
