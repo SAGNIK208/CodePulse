@@ -119,12 +119,12 @@ jobs:
             cd ..
 
             cd submission-service
-            pnpm add @bull-board/ui
             pm2 delete submission-service || true
             pm2 start "node --env-file=.env dist/index.js" --name submission-service
             cd ..
             
             cd evalutor-service
+            pnpm add @bull-board/ui
             pm2 delete evalutor-service || true
             pm2 start "node --env-file=.env dist/index.js" --name evalutor-service
             cd ..
