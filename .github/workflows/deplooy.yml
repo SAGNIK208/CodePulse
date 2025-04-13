@@ -105,12 +105,12 @@ jobs:
             echo "Using Node: $(node -v)"
             echo "Node path: $(which node)"
 
-            mkdir -p ${{ secrets.DEPLOY_PATH }}
             cd ${{ secrets.DEPLOY_PATH }}
 
             # Clean old and unpack
             rm -rf deploy
             tar -xzf build.tar.gz
+            cd deploy
 
             # Restart services
             cd problem-service
@@ -136,5 +136,5 @@ jobs:
             cd frontend/apps/frontend
             pm2 delete frontend || true
             pm2 start "PORT=3002 node server.js" --name frontend
-            cd ..
+            cd ../../..
           EOF
