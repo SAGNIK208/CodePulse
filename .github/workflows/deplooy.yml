@@ -31,10 +31,10 @@ jobs:
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/problem-service/.env
           echo "PORT=${{ secrets.PROBLEM_SERVICE_PORT }}" >> ./apps/problem-service/.env
           
-          echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/evaluator-service/.env
+          echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/evalutor-service/.env
           echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/problem-service/.env
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/evaluator-service/.env
-          echo "PORT=${{ secrets.EVALUATOR_SERVICE_PORT }}" >> ./apps/evaluator-service/.env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/evalutor-service/.env
+          echo "PORT=${{ secrets.EVALUATOR_SERVICE_PORT }}" >> ./apps/evalutor-service/.env
           
           echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/submission-service/.env
           echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/submission-service/.env
@@ -58,9 +58,9 @@ jobs:
           cp ./apps/problem-service/.env deploy/problem-service
 
           #Copy Evaluator-Service
-          mkdir -p deploy/evaluator-service
-          cp -r ./apps/evaluator-service/dist deploy/evaluator-service/dist
-          cp ./apps/evaluator-service/.env deploy/evaluator-service
+          mkdir -p deploy/evalutor-service
+          cp -r ./apps/evalutor-service/dist deploy/evalutor-service/dist
+          cp ./apps/evalutor-service/.env deploy/evalutor-service
 
           #Copy Submission-Service
           mkdir -p deploy/submission-service
@@ -123,9 +123,9 @@ jobs:
             pm2 start "node --env-file=.env dist/index.js" --name submission-service
             cd ..
             
-            cd evaluator-service
-            pm2 delete evaluator-service || true
-            pm2 start "node --env-file=.env dist/index.js" --name evaluator-service
+            cd evalutor-service
+            pm2 delete evalutor-service || true
+            pm2 start "node --env-file=.env dist/index.js" --name evalutor-service
             cd ..
             
             cd socket-server
