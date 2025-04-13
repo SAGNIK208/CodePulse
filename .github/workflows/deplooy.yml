@@ -65,7 +65,7 @@ jobs:
           #Copy Submission-Service
           mkdir -p deploy/submission-service
           cp -r ./apps/submission-service/dist deploy/submission-service/dist
-          cp ./apps/submission-service.env deploy/submission-service
+          cp ./apps/submission-service/.env deploy/submission-service
 
           #Copy Socket-Server
           mkdir -p deploy/socket-server
