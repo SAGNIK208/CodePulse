@@ -14,7 +14,7 @@ const Navbar: React.FC<NavbarProps> = ({links}) => (
   <nav className="flex justify-between items-center px-8 py-4 shadow-md bg-white fixed w-full z-10">
     {/* Logo & Brand Name */}
     <Link href="/" className="flex items-center space-x-3">
-      <Image src="/logo.svg" alt="CodePulse Logo" width={32} height={32} priority />
+      <Image src="/CodePulse/logo.svg" alt="CodePulse Logo" width={32} height={32} priority />
       <h1 className="text-2xl font-bold text-[#364FC7]">CodePulse</h1>
     </Link>
 
