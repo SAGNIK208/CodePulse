@@ -34,12 +34,14 @@ jobs:
           echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/evalutor-service/.env
           echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/evalutor-service/.env
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/evalutor-service/.env
+          echo "SOCKET_SERVICE_URL=${{ secrets.SOCKET_SERVICE_URL }}" >> ./apps/submission-service/.env
           echo "PORT=${{ secrets.EVALUATOR_SERVICE_PORT }}" >> ./apps/evalutor-service/.env
           
           echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/submission-service/.env
           echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/submission-service/.env
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/submission-service/.env
           echo "PORT=${{ secrets.SUBMISSION_SERVICE_PORT }}" >> ./apps/submission-service/.env
+          echo "SOCKET_SERVICE_URL=${{ secrets.SOCKET_SERVICE_URL }}" >> ./apps/submission-service/.env
           echo "PROBLEM_ADMIN_SERVICE_URL=${{ secrets.PROBLEM_SERVICE_URL }}" >> ./apps/submission-service/.env
           
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" > ./apps/socket-server/.env
