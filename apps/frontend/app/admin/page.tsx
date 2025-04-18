@@ -17,7 +17,7 @@ const PROBLEM_SERVICE_URL = process.env.NEXT_PUBLIC_PROBLEM_SERVICE_URL;
 
 
 // Mock data and types
-const languages = ["JavaScript", "JAVA", "CPP", "PYTHON"] as const;
+const languages = ["JAVASCRIPT", "JAVA", "CPP", "PYTHON"] as const;
 type Language = (typeof languages)[number];
 type Difficulty = "Easy" | "Medium" | "Hard";
 
@@ -53,7 +53,7 @@ const AdminAddProblemPage = () => {
             description: '',
             editorial: '',
             difficulty: "Easy",
-            codeStubs: [{ language: "JavaScript", startSnippet: '', userCodeSnippet: '', endSnippet: '' }],
+            codeStubs: [{ language: "JAVASCRIPT", startSnippet: '', userCodeSnippet: '', endSnippet: '' }],
             testCases: [{ input: '', output: '' }], // Initialize testCases
         },
     });
