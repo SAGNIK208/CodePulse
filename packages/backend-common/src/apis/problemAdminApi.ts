@@ -1,7 +1,7 @@
 import axiosInstance from "../axiosInstance";
 import { PROBLEM_ADMIN_SERVICE_URL } from "@repo/config/constant"
 
-const PROBLEM_ADMIN_API_URL = `${PROBLEM_ADMIN_SERVICE_URL}/api/v1`;
+const PROBLEM_ADMIN_API_URL = `${PROBLEM_ADMIN_SERVICE_URL}`;
 
 async function fetchProblemDetails(problemId: string){
   try {
