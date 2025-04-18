@@ -1,0 +1,142 @@
+name: Build and Deploy TurboRepo to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node & PNPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create .env file
+        run: |
+          echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/problem-service/.env
+          echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/problem-service/.env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/problem-service/.env
+          echo "PORT=${{ secrets.PROBLEM_SERVICE_PORT }}" >> ./apps/problem-service/.env
+          
+          echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/evalutor-service/.env
+          echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/problem-service/.env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/evalutor-service/.env
+          echo "PORT=${{ secrets.EVALUATOR_SERVICE_PORT }}" >> ./apps/evalutor-service/.env
+          
+          echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/submission-service/.env
+          echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/submission-service/.env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/submission-service/.env
+          echo "PORT=${{ secrets.SUBMISSION_SERVICE_PORT }}" >> ./apps/submission-service/.env
+          echo "PROBLEM_ADMIN_SERVICE_URL=${{ secrets.PROBLEM_SERVICE_URL }}" >> ./apps/submission-service/.env
+          
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" > ./apps/socket-server/.env
+          
+          echo "NEXT_PUBLIC_PROBLEM_SERVICE_URL=${{ secrets.PROBLEM_SERVICE_URL }}" > ./apps/frontend/.env
+          echo "NEXT_PUBLIC_SOCKET_SERVICE_URL=${{ secrets.SOCKET_SERVICE_URL }}" >> ./apps/frontend/.env
+          echo "NEXT_PUBLIC_SUBMISSION_SERVICE_URL=${{ secrets.SUBMISSION_SERVICE_URL }}" >> ./apps/frontend/.env
+
+      - name: Build Turborepo
+        run: pnpm build
+
+      - name: Create Deployment Archive
+        run: |
+          #Copy Problem-Service
+          mkdir -p deploy/problem-service
+          cp -r ./apps/problem-service/dist deploy/problem-service/dist
+          cp ./apps/problem-service/.env deploy/problem-service
+
+          #Copy Evaluator-Service
+          mkdir -p deploy/evalutor-service
+          cp -r ./apps/evalutor-service/dist deploy/evalutor-service/dist
+          cp ./apps/evalutor-service/.env deploy/evalutor-service
+
+          #Copy Submission-Service
+          mkdir -p deploy/submission-service
+          cp -r ./apps/submission-service/dist deploy/submission-service/dist
+          cp ./apps/submission-service/.env deploy/submission-service
+
+          #Copy Socket-Server
+          mkdir -p deploy/socket-server
+          cp -r ./apps/socket-server/dist deploy/socket-server/dist
+          cp ./apps/socket-server/.env deploy/socket-server
+
+          #Copy Frontend
+          mkdir -p deploy/frontend
+          cp -r ./apps/frontend/.next/standalone/* deploy/frontend
+          cp -r ./apps/frontend/.next/static deploy/frontend/apps/frontend/.next
+          cp -r ./apps/frontend/public deploy/frontend/apps/frontend/
+
+          tar -czf build.tar.gz deploy
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+    # No need to manually write the key to ~/.ssh/id_rsa after this
+
+      - name: Add Known Hosts
+        run: ssh-keyscan ${{ secrets.DEPLOY_IP }} >> ~/.ssh/known_hosts
+
+      - name: Upload Build to DEPLOY
+        run: |
+          scp build.tar.gz ${{ secrets.DEPLOY_USERNAME }}@${{ secrets.DEPLOY_IP }}:${{ secrets.DEPLOY_PATH }}
+
+      - name: SSH and Deploy
+        run: |
+          ssh ${{ secrets.DEPLOY_USERNAME }}@${{ secrets.DEPLOY_IP }} << EOF
+            set -e
+            # Prepend NVM path
+            export PATH=/home/ubuntu/.nvm/versions/node/v22.14.0/bin:\$PATH
+
+            # Optional: Verify which node is found first
+            echo "Using Node: $(node -v)"
+            echo "Node path: $(which node)"
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Clean old and unpack
+            rm -rf deploy
+            tar -xzf build.tar.gz
+            cd deploy
+
+            # Restart services
+            cd problem-service
+            pm2 delete problem-service || true
+            pm2 start "node --env-file=.env dist/index.js" --name problem-service
+            cd ..
+
+            cd submission-service
+            pm2 delete submission-service || true
+            pm2 start "node --env-file=.env dist/index.js" --name submission-service
+            cd ..
+            
+            cd evalutor-service
+            pnpm add @bull-board/ui
+            pm2 delete evalutor-service || true
+            pm2 start "node --env-file=.env dist/index.js" --name evalutor-service
+            cd ..
+            
+            cd socket-server
+            pm2 delete socket-server || true
+            pm2 start "node --env-file=.env dist/index.js" --name socket-server
+            cd ..
+
+            cd frontend/apps/frontend
+            pm2 delete frontend-CodePulse || true
+            pm2 start "PORT=3003 node server.js" --name frontend-CodePulse
+            cd ../../..
+          EOF
