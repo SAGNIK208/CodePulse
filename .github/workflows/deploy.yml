@@ -32,7 +32,7 @@ jobs:
           echo "PORT=${{ secrets.PROBLEM_SERVICE_PORT }}" >> ./apps/problem-service/.env
           
           echo "ATLAS_DB_URL=${{ secrets.DB_URL }}" > ./apps/evalutor-service/.env
-          echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/problem-service/.env
+          echo "LOG_DB_URL=${{ secrets.DB_URL }}" >> ./apps/evalutor-service/.env
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> ./apps/evalutor-service/.env
           echo "PORT=${{ secrets.EVALUATOR_SERVICE_PORT }}" >> ./apps/evalutor-service/.env
           
