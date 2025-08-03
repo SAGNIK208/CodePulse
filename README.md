@@ -1,84 +1,250 @@
-# Turborepo starter
+# CodePulse
 
-This Turborepo starter is maintained by the Turborepo core team.
+CodePulse is a comprehensive coding platform that allows users to practice coding problems, submit solutions, and get real-time feedback on their code. The platform supports multiple programming languages and provides a complete environment for coding practice and evaluation.
 
-## Using this example
+## Table of Contents
 
-Run the following command:
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Services Overview](#services-overview)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Environment Variables](#environment-variables)
+  - [Running the Application](#running-the-application)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-```sh
-npx create-turbo@latest
-```
+## Features
 
-## What's inside?
+- **Problem Management**: Create, read, update, and delete coding problems with descriptions, test cases, and code templates
+- **Multi-language Support**: Supports Python, Java, C++, and JavaScript
+- **Code Execution**: Secure code execution using Docker containers
+- **Real-time Feedback**: WebSocket-based real-time feedback on code submissions
+- **Admin Panel**: Comprehensive admin interface for problem management
+- **Responsive UI**: Modern, responsive frontend built with Next.js
+- **Code Editor**: Integrated Monaco code editor for coding
+- **Problem Filtering**: Filter problems by difficulty, tags, and categories
+- **Pagination**: Efficient pagination for problem listings
 
-This Turborepo includes the following packages/apps:
+## Architecture
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+CodePulse follows a microservices architecture with the following components:
 
 ```
-cd my-turborepo
-pnpm build
+┌─────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│   Frontend      │    │   Socket Server  │    │   Redis Cache    │
+│   (Next.js)     │◄──►│   (Express)      │◄──►│                  │
+└─────────────────┘    └──────────────────┘    └──────────────────┘
+       │                        │                         │
+       ▼                        ▼                         ▼
+┌─────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ Problem Service │    │Submission Service│    │ Evaluator Service│
+│   (Express)     │◄──►│   (Fastify)      │◄──►│   (Express)      │
+└─────────────────┘    └──────────────────┘    └──────────────────┘
+       │                        │                         │
+       ▼                        ▼                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        MongoDB Database                         │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Develop
+## Tech Stack
 
-To develop all apps and packages, run the following command:
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend Services**: Node.js, Express, Fastify
+- **Database**: MongoDB with Mongoose
+- **Message Queue**: BullMQ with Redis
+- **Containerization**: Docker for secure code execution
+- **Real-time Communication**: Socket.IO
+- **Deployment**: PM2, GitHub Actions
+- **Monorepo Management**: Turborepo, pnpm
+
+## Project Structure
 
 ```
-cd my-turborepo
+CodePulse/
+├── apps/
+│   ├── evalutor-service/     # Code evaluation service
+│   ├── frontend/             # Next.js frontend application
+│   ├── problem-service/      # Problem management service
+│   ├── socket-server/        # WebSocket server for real-time communication
+│   └── submission-service/   # Code submission service
+├── packages/
+│   ├── backend-common/       # Shared backend utilities
+│   ├── code-executor/        # Code execution engine
+│   ├── config/               # Configuration constants
+│   ├── db/                   # Database models and connections
+│   ├── errors/               # Custom error classes
+│   ├── eslint-config/        # ESLint configurations
+│   ├── lib/                  # Shared libraries
+│   ├── mq/                   # Message queue implementation
+│   ├── redis/                # Redis connection utilities
+│   ├── tailwind-config/      # Tailwind CSS configuration
+│   ├── typescript-config/    # TypeScript configurations
+│   └── ui/                   # Shared UI components
+├── .github/workflows/        # GitHub Actions workflows
+├── package.json              # Root package.json
+├── pnpm-workspace.yaml       # pnpm workspace configuration
+└── turbo.json                # Turborepo configuration
+```
+
+## Services Overview
+
+### 1. Frontend (Next.js)
+- User interface for browsing problems, coding, and submitting solutions
+- Admin panel for problem management
+- Responsive design with Tailwind CSS
+- Integrated Monaco code editor
+- Real-time feedback via WebSocket
+
+### 2. Problem Service (Express)
+- CRUD operations for coding problems
+- Problem filtering and pagination
+- Tag management
+- RESTful API endpoints
+
+### 3. Submission Service (Fastify)
+- Handles code submissions from users
+- Queues submissions for evaluation
+- Communicates with Evaluator Service via message queue
+
+### 4. Evaluator Service (Express)
+- Processes code submissions from the queue
+- Executes code in secure Docker containers
+- Evaluates code against test cases
+- Sends results back via message queue
+
+### 5. Socket Server (Express)
+- Manages WebSocket connections
+- Provides real-time feedback to users
+- Communicates evaluation results to frontend
+
+### 6. Code Executor (Docker)
+- Secure code execution using Docker containers
+- Language-specific executors for Python, Java, C++, and JavaScript
+- Memory and time limits for code execution
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- pnpm (v9 or higher)
+- Docker (for code execution)
+- MongoDB (or MongoDB Atlas)
+- Redis
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/CodePulse.git
+cd CodePulse
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+```
+
+### Environment Variables
+
+Each service requires specific environment variables. Create `.env` files in each service directory:
+
+**apps/problem-service/.env**
+```env
+ATLAS_DB_URL=your_mongodb_connection_string
+LOG_DB_URL=your_log_db_connection_string
+REDIS_HOST=localhost
+PORT=3000
+```
+
+**apps/submission-service/.env**
+```env
+ATLAS_DB_URL=your_mongodb_connection_string
+LOG_DB_URL=your_log_db_connection_string
+REDIS_HOST=localhost
+PORT=3001
+SOCKET_SERVICE_URL=http://localhost:3002
+PROBLEM_ADMIN_SERVICE_URL=http://localhost:3000
+```
+
+**apps/evalutor-service/.env**
+```env
+ATLAS_DB_URL=your_mongodb_connection_string
+LOG_DB_URL=your_log_db_connection_string
+REDIS_HOST=localhost
+SOCKET_SERVICE_URL=http://localhost:3002
+PORT=3003
+```
+
+**apps/socket-server/.env**
+```env
+REDIS_HOST=localhost
+PORT=3002
+```
+
+**apps/frontend/.env**
+```env
+NEXT_PUBLIC_PROBLEM_SERVICE_URL=http://localhost:3000
+NEXT_PUBLIC_SOCKET_SERVICE_URL=http://localhost:3002
+NEXT_PUBLIC_SUBMISSION_SERVICE_URL=http://localhost:3001
+```
+
+### Running the Application
+
+1. Start all services in development mode:
+```bash
 pnpm dev
 ```
 
-### Remote Caching
+2. Access the application:
+- Frontend: http://localhost:3004
+- Problem Service: http://localhost:3000
+- Submission Service: http://localhost:3001
+- Socket Server: http://localhost:3002
+- Evaluator Service: http://localhost:3003
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Deployment
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+CodePulse is configured for deployment using GitHub Actions. The deployment workflow:
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+1. Builds all services using Turborepo
+2. Creates deployment archives for each service
+3. Deploys to an EC2 instance via SSH
+4. Restarts services using PM2
 
-```
-cd my-turborepo
-npx turbo login
-```
+To deploy:
+1. Set up the required secrets in GitHub Actions:
+   - `DB_URL`: MongoDB connection string
+   - `REDIS_HOST`: Redis host
+   - `DEPLOY_SSH_KEY`: SSH key for EC2 instance
+   - `DEPLOY_IP`: EC2 instance IP
+   - `DEPLOY_USERNAME`: EC2 username
+   - `DEPLOY_PATH`: Deployment path on EC2
+   - `SOCKET_SERVICE_URL`: Socket service URL
+   - `PROBLEM_SERVICE_URL`: Problem service URL
+   - `SUBMISSION_SERVICE_URL`: Submission service URL
+   - `PROBLEM_SERVICE_PORT`: Problem service port
+   - `SUBMISSION_SERVICE_PORT`: Submission service port
+   - `EVALUATOR_SERVICE_PORT`: Evaluator service port
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+2. Push to the `main` branch to trigger deployment
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## Contributing
 
-```
-npx turbo link
-```
+Contributions are welcome! Please follow these steps:
 
-## Useful Links
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-Learn more about the power of Turborepo:
+## License
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
